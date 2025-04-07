@@ -1,0 +1,12 @@
+
+To use a custom icon for your Personal Diary application:
+
+1. Create a .icns file (macOS) or .ico file (Windows)
+2. Name it 'app_icon.icns' and place it in the same directory as this build script
+3. Run the build script again
+
+For macOS, you can convert images to .icns using tools like:
+- iconutil (command line)
+- Image2Icon (GUI application)
+- Online converters like https://iconverticons.com/
+            
