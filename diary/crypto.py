@@ -4,6 +4,7 @@ Handles encryption and decryption operations for secure storage.
 """
 
 import os
+import sys
 import base64
 from pathlib import Path
 from cryptography.fernet import Fernet, InvalidToken
@@ -11,18 +12,84 @@ from cryptography.fernet import Fernet, InvalidToken
 
 class CryptoManager:
     def __init__(self, key_path=".key.key", check_key_exists=True):
-        self.key_path = key_path
-        # Convert to absolute path if it's a relative path
-        if not os.path.isabs(self.key_path):
-            # First check if it exists in current directory
-            if os.path.exists(self.key_path):
-                self.key_path = os.path.abspath(self.key_path)
-            # Then check if it exists in the user's home directory
-            elif os.path.exists(os.path.join(str(Path.home()), self.key_path)):
-                self.key_path = os.path.join(str(Path.home()), self.key_path)
+        self.key_path = self._resolve_path(key_path)
 
         if check_key_exists:
             self._ensure_key_exists()
+
+    def _resolve_path(self, key_path):
+        """Resolve the path to the key file, trying multiple possible locations."""
+        # If it's an absolute path, use it directly
+        if os.path.isabs(key_path):
+            return key_path
+
+        # Check if running as a frozen app (PyInstaller)
+        if getattr(sys, "frozen", False):
+            # When running as bundled app, check for the key in the application directory
+            if sys.platform == "darwin":  # macOS
+                # Use the Resources directory inside the .app bundle
+                bundle_dir = os.path.dirname(sys.executable)
+                if ".app/Contents/MacOS" in bundle_dir:
+                    resources_dir = bundle_dir.replace("MacOS", "Resources")
+                    app_key_path = os.path.join(resources_dir, key_path)
+                    if os.path.exists(app_key_path):
+                        return app_key_path
+
+                # Try app-specific directories in user's home
+                app_support = os.path.join(
+                    str(Path.home()), "Library", "Application Support", "PersonalDiary"
+                )
+                os.makedirs(app_support, exist_ok=True)
+                app_key_path = os.path.join(app_support, key_path)
+                if os.path.exists(app_key_path):
+                    return app_key_path
+                return app_key_path  # Return this path even if it doesn't exist yet
+
+            elif sys.platform == "win32":  # Windows
+                # Use %APPDATA% for Windows
+                app_data = os.environ.get("APPDATA", "")
+                if app_data:
+                    app_dir = os.path.join(app_data, "PersonalDiary")
+                    os.makedirs(app_dir, exist_ok=True)
+                    app_key_path = os.path.join(app_dir, key_path)
+                    if os.path.exists(app_key_path):
+                        return app_key_path
+                    return app_key_path  # Return this path even if it doesn't exist yet
+
+        # Standard checks for non-bundled app
+        # 1. Check current directory
+        current_dir_path = os.path.abspath(key_path)
+        if os.path.exists(current_dir_path):
+            return current_dir_path
+
+        # 2. Check user's home directory
+        home_path = os.path.join(str(Path.home()), key_path)
+        if os.path.exists(home_path):
+            return home_path
+
+        # 3. Check for hidden version in home directory
+        hidden_home_path = os.path.join(str(Path.home()), ".personal-diary", key_path)
+        if os.path.exists(hidden_home_path):
+            return hidden_home_path
+
+        # 4. If path doesn't exist anywhere, default to a writable location
+        if getattr(sys, "frozen", False):
+            # If bundled, use app-specific directory
+            if sys.platform == "darwin":
+                app_support = os.path.join(
+                    str(Path.home()), "Library", "Application Support", "PersonalDiary"
+                )
+                os.makedirs(app_support, exist_ok=True)
+                return os.path.join(app_support, key_path)
+            elif sys.platform == "win32":
+                app_data = os.environ.get("APPDATA", "")
+                if app_data:
+                    app_dir = os.path.join(app_data, "PersonalDiary")
+                    os.makedirs(app_dir, exist_ok=True)
+                    return os.path.join(app_dir, key_path)
+
+        # Final fallback - use current directory
+        return os.path.abspath(key_path)
 
     def _ensure_key_exists(self):
         """Check if encryption key exists, otherwise create it."""
