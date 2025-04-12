@@ -22,7 +22,7 @@ def setup_environment():
 
     # Check if PyInstaller is installed
     try:
-        import pyinstaller
+        import PyInstaller
 
         print("PyInstaller is already installed.")
     except ImportError:

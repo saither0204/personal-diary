@@ -19,13 +19,13 @@ This method creates a standalone application that doesn't require Python to be i
 1. Open Terminal
 2. Navigate to the project directory:
 
-   ```
+   ```plaintext
    cd /path/to/personal-diary
    ```
 
 3. Run the build script:
 
-   ```
+   ```plaintext
    ./build_app.py
    ```
 
@@ -48,25 +48,25 @@ This method creates a standalone application that doesn't require Python to be i
 1. Open Terminal
 2. Navigate to the project directory:
 
-   ```
+   ```plaintext
    cd /path/to/personal-diary
    ```
 
 3. Install using pip:
 
-   ```
+   ```plaintext
    pip install -e .
    ```
 
    Or to install for all users (requires admin privileges):
 
-   ```
+   ```plaintext
    sudo pip install -e .
    ```
 
 4. Once installed, you can run the application by typing:
 
-   ```
+   ```plaintext
    personal-diary
    ```
 
@@ -96,7 +96,7 @@ If you encounter any issues:
 - Check that the cryptography package is properly installed
 - On macOS, if the app won't open, try:
 
-  ```
+  ```plaintext
   xattr -cr /Applications/PersonalDiary.app
   ```
 
@@ -105,6 +105,6 @@ If you encounter any issues:
 - For the bundled app: Simply delete the application
 - For pip installation:
 
-  ```
+  ```plaintext
   pip uninstall personal-diary
   ```
