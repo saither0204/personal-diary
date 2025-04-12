@@ -14,6 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.9", "3.10", "3.11"]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v3
@@ -22,17 +23,23 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          
+      - name: Install system dependencies on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install cryptography tkinter pyinstaller; fi
+          pip install pytest pytest-cov
+          pip install -r requirements.txt
         shell: bash
 
       - name: Test with pytest
         run: |
-          pytest
+          python -m pytest tests/ -v
 
   build:
     needs: test
@@ -40,6 +47,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, windows-latest]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v3
@@ -48,16 +56,21 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+          
+      - name: Install system dependencies on Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
-          pip install cryptography
+          pip install -r requirements.txt
 
       - name: Build with PyInstaller
         run: |
-          pyinstaller PersonalDiary.spec
+          python -m PyInstaller PersonalDiary.spec
 
       - name: Upload macOS artifact
         if: matrix.os == 'macos-latest'
