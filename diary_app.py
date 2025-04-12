@@ -9,6 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.messagebox as messagebox
 import shutil
+from pathlib import Path
 
 from diary.crypto import CryptoManager
 from diary.auth import AuthManager
@@ -21,36 +22,66 @@ from diary.ui.date_tab import DateViewTab
 
 class DiaryApplication:
     def __init__(self):
-        # First, check if we need to migrate from old to new hidden files
-        self.check_and_migrate_files()
+        # Initialize application by setting up root window first
+        # This is important to prevent Toplevel errors
+        self.root = tk.Tk()
+        self.root.withdraw()  # Hide main window until we're fully initialized
 
-        # Initialize crypto manager first
-        self.crypto_manager = CryptoManager()
+        try:
+            # First, check if we need to migrate from old to new hidden files
+            self.check_and_migrate_files()
 
-        # Check if key exists, otherwise generate one
-        if not os.path.exists(".key.key"):
-            self.create_key_generation_dialog()
+            # Initialize crypto manager first
+            self.crypto_manager = CryptoManager()
 
-        # Initialize other managers
-        self.auth_manager = AuthManager(self.crypto_manager)
-        self.storage_manager = EntryStorage(self.crypto_manager)
+            # Get the actual path being used
+            key_path = self.crypto_manager.key_path
 
-        # Create the main window
-        self.main_window = MainWindow(self.auth_manager, self.storage_manager)
+            # Check if key exists, otherwise generate one
+            if not os.path.exists(key_path):
+                self.create_key_generation_dialog()
 
-        # Set up tabs
-        self.setup_tabs()
+            # Initialize other managers
+            self.auth_manager = AuthManager(self.crypto_manager)
+            self.storage_manager = EntryStorage(self.crypto_manager)
+
+            # Create the main window
+            self.main_window = MainWindow(
+                self.auth_manager, self.storage_manager, root=self.root
+            )
+
+            # Set up tabs
+            self.setup_tabs()
+
+            # Now show the main window
+            self.root.deiconify()
+        except Exception as e:
+            # Handle initialization errors
+            messagebox.showerror(
+                "Initialization Error", f"Failed to start application: {str(e)}"
+            )
+            self.root.destroy()
+            sys.exit(1)
 
     def check_and_migrate_files(self):
         """Check if old files exist and migrate them to new hidden files."""
-        # Check for old key file
-        if os.path.exists("key.key") and not os.path.exists(".key.key"):
+        crypto_manager = CryptoManager(check_key_exists=False)
+        key_path = crypto_manager.key_path
+
+        # Determine the directory for the new key file
+        key_dir = os.path.dirname(key_path)
+
+        # Check for old key file in current directory
+        if os.path.exists("key.key") and not os.path.exists(key_path):
             try:
-                # Just copy the file to maintain the same key
-                shutil.copy("key.key", ".key.key")
+                # Create directory if it doesn't exist
+                os.makedirs(key_dir, exist_ok=True)
+
+                # Copy the file to maintain the same key
+                shutil.copy("key.key", key_path)
                 messagebox.showinfo(
                     "Migration",
-                    "Encryption key migrated to hidden file (.key.key).\n"
+                    f"Encryption key migrated to {key_path}.\n"
                     "The original key.key file can now be deleted.",
                 )
             except Exception as e:
@@ -58,14 +89,21 @@ class DiaryApplication:
                     "Migration Error", f"Failed to migrate key file: {str(e)}"
                 )
 
+        # Similarly for password file
+        # Get the appropriate path for password file
+        pwd_path = os.path.join(key_dir, ".password.txt")
+
         # Check for old password file
-        if os.path.exists("password.txt") and not os.path.exists(".password.txt"):
+        if os.path.exists("password.txt") and not os.path.exists(pwd_path):
             try:
-                # Just copy the file to maintain the same password
-                shutil.copy("password.txt", ".password.txt")
+                # Create directory if it doesn't exist
+                os.makedirs(key_dir, exist_ok=True)
+
+                # Copy the file to maintain the same password
+                shutil.copy("password.txt", pwd_path)
                 messagebox.showinfo(
                     "Migration",
-                    "Password file migrated to hidden file (.password.txt).\n"
+                    f"Password file migrated to {pwd_path}.\n"
                     "The original password.txt file can now be deleted.",
                 )
             except Exception as e:
@@ -76,7 +114,7 @@ class DiaryApplication:
     def create_key_generation_dialog(self):
         """Create a dialog for key generation."""
         # Create a simple dialog window
-        dialog = tk.Toplevel()
+        dialog = tk.Toplevel(self.root)
         dialog.title("Generate Encryption Key")
         dialog.geometry("400x200")
         dialog.configure(bg="#f5f5f5")
@@ -95,7 +133,7 @@ class DiaryApplication:
         # Add a label
         label = ttk.Label(
             main_frame,
-            text="No encryption key found. A new one needs to be generated.\nClick 'Generate' to create a new key.",
+            text=f"No encryption key found at:\n{self.crypto_manager.key_path}\n\nA new one needs to be generated.\nClick 'Generate' to create a new key.",
             justify=tk.CENTER,
         )
         label.pack(pady=20)
@@ -106,7 +144,8 @@ class DiaryApplication:
                 # Generate a new key using our already initialized crypto manager
                 self.crypto_manager.generate_key()
                 messagebox.showinfo(
-                    "Success", "Encryption key generated and saved successfully."
+                    "Success",
+                    f"Encryption key generated and saved at:\n{self.crypto_manager.key_path}",
                 )
                 dialog.destroy()
             except Exception as e:
@@ -137,10 +176,10 @@ class DiaryApplication:
         dialog.wait_window()
 
         # Check if key was created
-        if not os.path.exists(".key.key"):
+        if not os.path.exists(self.crypto_manager.key_path):
             messagebox.showerror(
                 "Error",
-                "Key generation failed. Cannot continue without an encryption key.",
+                f"Key generation failed. Cannot continue without an encryption key at {self.crypto_manager.key_path}",
             )
             sys.exit(1)
 
@@ -197,8 +236,16 @@ class DiaryApplication:
 
 def main():
     """Entry point for the application."""
-    app = DiaryApplication()
-    app.run()
+    try:
+        app = DiaryApplication()
+        app.run()
+    except Exception as e:
+        # Catch any unexpected errors
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("Fatal Error", f"An unexpected error occurred: {str(e)}")
+        root.destroy()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
