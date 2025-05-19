@@ -19,31 +19,26 @@ def test_crypto_manager_init():
     assert crypto is not None
 
 
-def test_crypto_key_generation():
+def test_crypto_key_generation(tmp_path):
     """Test key generation and encryption/decryption."""
     # Use a temporary path for the key
-    temp_key_path = "temp_test_key.key"
+    temp_key_path = tmp_path / "temp_test_key.key"
 
-    try:
-        # Create a crypto manager with no key checking
-        crypto = CryptoManager(key_path=temp_key_path, check_key_exists=False)
+    # Create a crypto manager with no key checking
+    crypto = CryptoManager(key_path=temp_key_path, check_key_exists=False)
 
-        # Generate a new key
-        key = crypto.generate_key()
-        assert key is not None
-        assert len(key) == 44  # Fernet key is 32 bytes, base64 encoded
+    # Generate a new key
+    key = crypto.generate_key()
+    assert key is not None
+    assert len(key) == 44  # Fernet key is 32 bytes, base64 encoded
 
-        # Test encryption and decryption
-        original_text = "Test encryption and decryption"
-        encrypted = crypto.encrypt(original_text)
-        decrypted = crypto.decrypt(encrypted)
+    # Test encryption and decryption
+    original_text = "Test encryption and decryption"
+    encrypted = crypto.encrypt(original_text)
+    decrypted = crypto.decrypt(encrypted)
 
-        assert encrypted != original_text
-        assert decrypted == original_text
-    finally:
-        # Clean up the temporary key file
-        if os.path.exists(temp_key_path):
-            os.remove(temp_key_path)
+    assert encrypted != original_text
+    assert decrypted == original_text
 
 
 def test_path_resolution():
