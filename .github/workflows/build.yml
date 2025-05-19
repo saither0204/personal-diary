@@ -24,20 +24,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Get pip cache dir
-        id: pip_cache
-        run: |
-          echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: Cache pip dependencies
+      - name: Cache virtual environment
         uses: actions/cache@v4
         with:
-          path: ${{ steps.pip_cache.outputs.dir }}
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-venv-${{ matrix.python-version }}-
+            ${{ runner.os }}-venv-
           
       - name: Install system dependencies on Ubuntu
         if: matrix.os == 'ubuntu-latest'
