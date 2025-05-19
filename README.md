@@ -44,6 +44,10 @@ These can be found in `requirements.txt`.
     pip install -r requirements.txt
     ```
 
+4.  **Install development dependencies (for contributors):**
+    ```bash
+    pip install -r requirements-dev.txt
+    ```
 4.  **Initial Run & Setup:**
     *   On the first run, the application will guide you through creating an encryption key and setting up a password if they don't already exist.
     *   The encryption key (`.key.key`) and password file (`.password.txt`) are stored in a platform-specific application data directory (e.g., `~/.local/share/PersonalDiary` on Linux, `~/Library/Application Support/PersonalDiary` on macOS, `%APPDATA%\PersonalDiary` on Windows).
