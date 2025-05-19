@@ -1,110 +1,107 @@
-# Personal Diary - Installation Guide
+# Personal Diary Application
 
-This document explains how to install the Personal Diary application on your computer.
+A secure and private desktop application for writing and managing personal diary entries.
 
-## Prerequisites
+## Features
 
-- Python 3.6 or higher
-- pip (Python package installer)
-- macOS, Windows, or Linux
+*   **Secure Storage:** All diary entries are encrypted locally to ensure privacy.
+*   **Password Protection:** The application requires a password for access.
+*   **Encryption:** Uses robust encryption algorithms to protect your data.
+*   **Multiple Views:**
+    *   Write new entries with mood tracking.
+    *   View all entries in a chronological list.
+    *   View entries grouped by date.
+*   **Data Migration:** Supports migration of data from older versions.
+*   **Cross-Platform:** Built with Python and Tkinter, making it potentially cross-platform (though specific OS features for key/data storage are handled).
 
-## Installation Methods
+## Requirements
 
-There are two ways to install the Personal Diary application:
+The application requires the following Python packages:
 
-### Method 1: Using the Bundled Application (Recommended for regular users)
+*   cryptography
+*   PyInstaller (for building)
+*   pytest (for testing)
+*   pytest-cov (for test coverage)
 
-This method creates a standalone application that doesn't require Python to be installed.
+These can be found in `requirements.txt`.
 
-1. Open Terminal
-2. Navigate to the project directory:
+## Installation and Setup
 
-   ```plaintext
-   cd /path/to/personal-diary
-   ```
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository_url>
+    cd personal-diary-project # Or your project's directory name
+    ```
 
-3. Run the build script:
+2.  **Create a virtual environment (recommended):**
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    ```
 
-   ```plaintext
-   ./build_app.py
-   ```
+3.  **Install dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-4. The script will:
-   - Install required dependencies (PyInstaller, cryptography)
-   - Set proper permissions for sensitive files
-   - Create an application bundle in the `dist` folder
+4.  **Initial Run & Setup:**
+    *   On the first run, the application will guide you through creating an encryption key and setting up a password if they don't already exist.
+    *   The encryption key (`.key.key`) and password file (`.password.txt`) are stored in a platform-specific application data directory (e.g., `~/.local/share/PersonalDiary` on Linux, `~/Library/Application Support/PersonalDiary` on macOS, `%APPDATA%\PersonalDiary` on Windows).
 
-5. Once complete, you can find the application at:
-   - macOS: `dist/PersonalDiary.app`
-   - Windows: `dist/PersonalDiary.exe`
-   - Linux: `dist/PersonalDiary`
+## How to Run
 
-6. To install on macOS:
-   - Copy `PersonalDiary.app` to your Applications folder
-   - Right-click and select "Open" the first time (to bypass Gatekeeper)
+To run the application:
 
-### Method 2: Using pip (For developers)
+```bash
+python diary_app.py
+```
 
-1. Open Terminal
-2. Navigate to the project directory:
+## File Structure
 
-   ```plaintext
-   cd /path/to/personal-diary
-   ```
+*   `diary_app.py`: Main entry point for the application.
+*   `diary/`: Core application modules.
+    *   `auth.py`: Handles user authentication and password management.
+    *   `crypto.py`: Manages encryption and decryption of data.
+    *   `storage.py`: Handles reading and writing diary entries.
+    *   `ui/`: Contains the user interface components (Tkinter based).
+        *   `main_window.py`: The main application window.
+        *   `write_tab.py`, `view_tab.py`, `date_tab.py`: UI for different sections.
+*   `requirements.txt`: Lists project dependencies.
+*   `setup.py`: Script for packaging (though PyInstaller is preferred for executables).
+*   `build_app.py`: Script to facilitate building the application using PyInstaller.
+*   `PersonalDiary.spec`: PyInstaller specification file.
+*   `tests/`: Contains unit tests for the application.
+*   `.github/`: Contains GitHub Actions workflows (e.g., for CI).
+*   `LICENSE`: Project's license file.
+*   `README.md`: This file.
 
-3. Install using pip:
+## Building the Application
 
-   ```plaintext
-   pip install -e .
-   ```
+You can build a standalone executable using PyInstaller:
 
-   Or to install for all users (requires admin privileges):
+1.  **Ensure PyInstaller is installed:**
+    ```bash
+    pip install PyInstaller
+    ```
+2.  **Run the build script:**
+    ```bash
+    python build_app.py
+    ```
+    This will use the `PersonalDiary.spec` file to create a distributable application in the `dist` folder.
 
-   ```plaintext
-   sudo pip install -e .
-   ```
+## Contributing
 
-4. Once installed, you can run the application by typing:
+Contributions are welcome! If you'd like to contribute:
 
-   ```plaintext
-   personal-diary
-   ```
+1.  Fork the repository.
+2.  Create a new branch for your feature or bug fix (`git checkout -b feature/your-feature-name`).
+3.  Make your changes.
+4.  Add tests for your changes if applicable.
+5.  Ensure all tests pass (`pytest`).
+6.  Commit your changes (`git commit -m 'Add some feature'`).
+7.  Push to the branch (`git push origin feature/your-feature-name`).
+8.  Open a Pull Request.
 
-## Security Notes
+## License
 
-- The application uses two hidden files for security:
-  - `.key.key`: Encryption key
-  - `.password.txt`: Encrypted password storage
-
-- These files are automatically set with secure permissions (600) during the build process
-
-## Custom Icon
-
-To use a custom icon:
-
-1. Create a `.icns` file (for macOS) or `.ico` file (for Windows)
-2. Name it `app_icon.icns` (or `app_icon.ico` on Windows)
-3. Place it in the project root directory
-4. Run the build script again
-
-## Troubleshooting
-
-If you encounter any issues:
-
-- Make sure Python 3.6+ is installed and in your PATH
-- Verify you have write permissions in the project directory
-- Check that the cryptography package is properly installed
-- On macOS, if the app won't open, try:
-
-  ```plaintext
-  xattr -cr /Applications/PersonalDiary.app
-  ```
-
-## Uninstallation
-
-- For the bundled app: Simply delete the application
-- For pip installation:
-
-  ```plaintext
-  pip uninstall personal-diary
-  ```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
